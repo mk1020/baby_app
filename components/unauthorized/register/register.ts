@@ -34,7 +34,7 @@ export const register = async (server: FastifyInstance) => {
    server.post(
       '/register',
       options,
-      async (request: FastifyRequest, reply: FastifyReply) => {
+      async (request, reply) => {
          return 'it worked!2'
       }
    )
