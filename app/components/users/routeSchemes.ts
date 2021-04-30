@@ -1,4 +1,4 @@
-import {RouteShorthandOptions} from "fastify";
+import {RouteShorthandOptions} from 'fastify';
 
 export const usersSchemeGet: RouteShorthandOptions = {
   schema: {
@@ -11,7 +11,7 @@ export const usersSchemeGet: RouteShorthandOptions = {
       },
     },
   },
-}
+};
 
 export const usersSchemePost: RouteShorthandOptions = {
   schema: {
@@ -28,4 +28,4 @@ export const usersSchemePost: RouteShorthandOptions = {
       },
     },
   },
-}
+};

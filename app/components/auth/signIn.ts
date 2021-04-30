@@ -12,12 +12,12 @@ export const options: RouteShorthandOptions = {
       type: 'object',
       required: ['email', 'password'],
       properties: {
-        email: {
+           email: {
           type: 'string',
           pattern: emailRegex,
         },
         password: {
-          type: 'string',
+              type: 'string',
           pattern: passRegex,
         },
       },
