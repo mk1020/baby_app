@@ -12,8 +12,8 @@ export const options: RouteShorthandOptions = {
       type: 'object',
       required: ['email', 'password'],
       properties: {
-           email: {
-          type: 'string',
+              email: {
+             type: 'string',
           pattern: emailRegex,
         },
         password: {
