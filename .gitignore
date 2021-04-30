@@ -1,14 +1,9 @@
-# Dependencies
 node_modules
-
-# yarn error logs
-yarn-error.log
-
-# Environment varibales
+*.log
+*.pem
+.DS_Store
 .env*
 !.env*.example
-
-# Code coverage
 coverage
-
 .idea
+dist
