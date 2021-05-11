@@ -1,16 +1,11 @@
-import {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-  RouteShorthandOptions,
-} from 'fastify';
+import {RouteShorthandOptions} from 'fastify';
 import {emailRegex, passRegex} from '../../common/validation/regex';
 
-export const options: RouteShorthandOptions = {
+export const signUpScheme: RouteShorthandOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['email', 'password'],
+      required: ['email', 'password', 'confirmPassword'],
       properties: {
         email: {
           type: 'string',
@@ -20,6 +15,12 @@ export const options: RouteShorthandOptions = {
           type: 'string',
           pattern: passRegex,
         },
+        confirmPassword: {
+          type: 'string',
+          const: {
+            $data: '1/password'
+          }
+        },
       },
     },
     response: {
@@ -28,14 +29,4 @@ export const options: RouteShorthandOptions = {
       },
     },
   },
-};
-
-export const signIn = async (server: FastifyInstance) => {
-  server.post(
-    '/signin',
-    options,
-    async (request: FastifyRequest, reply: FastifyReply) => {
-
-    }
-  );
 };

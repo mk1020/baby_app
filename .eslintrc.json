@@ -100,7 +100,7 @@
     "max-len": [
       "error",
       {
-        "code": 120,
+        "code": 170,
         "ignoreUrls": true
       }
     ],
@@ -221,10 +221,10 @@
       "error",
       "as-needed"
     ],
-    "arrow-body-style": [
+    /*"arrow-body-style": [
       "error",
       "as-needed"
-    ],
+    ],*/
     "arrow-spacing": [
       "error"
     ],
