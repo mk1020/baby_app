@@ -1,7 +1,6 @@
 import {createHash, randomBytes} from 'crypto';
 
-export const hash256Salt = (text: string): string => {
-  const salt = randomBytes(16);
-  const hash = createHash('sha256').update(text).update(salt).digest('base64');
-  return  hash;
+export const sha256 = (text: string, salt?: string): string => {
+  const hash = createHash('sha256').update(text + salt).digest('hex');
+  return hash;
 };

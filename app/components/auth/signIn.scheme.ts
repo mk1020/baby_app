@@ -1,11 +1,11 @@
 import {RouteShorthandOptions} from 'fastify';
 import {emailRegex, passRegex} from '../../common/validation/regex';
 
-export const signUpScheme: RouteShorthandOptions = {
+export const signInScheme: RouteShorthandOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['email', 'password', 'confirmPassword'],
+      required: ['email', 'password'],
       properties: {
         email: {
           type: 'string',
@@ -15,18 +15,15 @@ export const signUpScheme: RouteShorthandOptions = {
           type: 'string',
           pattern: passRegex,
         },
-        confirmPassword: {
-          type: 'string',
-          const: {
-            $data: '1/password'
-          }
-        },
       },
     },
     response: {
-      201: {
+      200: {
         type: 'string',
       },
+      401: {
+        type: 'string'
+      }
     },
   },
 };
