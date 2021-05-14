@@ -21,7 +21,7 @@ export const signInScheme: RouteShorthandOptions = {
       200: {
         type: 'string',
       },
-      401: {
+      403: {
         type: 'string'
       }
     },

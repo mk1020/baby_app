@@ -18,6 +18,9 @@ export const options: RouteShorthandOptions = {
       200: {
         type: 'string',
       },
+      404: {
+        type: 'string'
+      }
     },
   },
 };
