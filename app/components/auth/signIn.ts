@@ -15,25 +15,17 @@ export const signIn = async (server: FastifyInstance) => {
     '/signin',
     signInScheme,
     async (req, reply) => {
-      const {email, password, device = 'mobile'} = req.body;
-      const queryRes = await server.pg.query('select password_hash, user_id from root.users where email = $1', [email]);
-      !queryRes.rows.length && reply.status(401).send('User not found');
-
-      const passHashBD = queryRes.rows[0].password_hash;
-      const userId = queryRes.rows[0].user_id;
+      const {password, device = 'mobile'} = req.body;
 
       const passHashSent = sha256(password, envDev.passSalt);
+      const queryRes = await server.pg.query('SELECT user_id FROM root.users WHERE password_hash = $1', [passHashSent]);
+      !queryRes.rows.length && reply.status(403).send('Wrong password or user is not registered');
 
-      if (passHashBD === passHashSent) {
-        const token = randomBytes(64).toString('hex');
+      const userId = queryRes.rows[0].user_id;
+      const token = randomBytes(64).toString('hex');
 
-        const curDate = new Date();
-        curDate.setMonth(curDate.getMonth() + 1);
-        const expires = new Date(curDate.getTime()).toLocaleString();
-
-        await server.pg.query('insert into root.users_access values ($1, $2, $3, $4)', [token, userId, device, expires]);
-        reply.status(200).send();
-      }
+      await server.pg.query(`INSERT INTO root.users_access VALUES ($1, $2, $3, current_timestamp + INTERVAL '1 month')`, [token, userId, device]);
+      reply.status(200).send();
     }
   );
 };

@@ -6,5 +6,5 @@ type TEnvDev = {
 
 export const envDev:TEnvDev = {
   port: process.env.PORT as string,
-  passSalt: process.env['PASS_SALT '] as string
+  passSalt: process.env['PASS_SALT'] as string
 };
