@@ -1,8 +1,8 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import {signInScheme} from './signIn.scheme';
-import {sha256} from '../../common/helpers/other';
-import {envDev} from '../../envConfig';
+import {env} from '../../envConfig';
 import {randomBytes} from 'crypto';
+import {sha256} from './assistant'
 
 interface IBody {
    email: string
@@ -17,8 +17,8 @@ export const signIn = async (server: FastifyInstance) => {
     async (req, reply) => {
       const {email, password, device = 'mobile'} = req.body;
 
-      const passHashSent = sha256(password, envDev.passSalt);
-      const queryRes = await server.pg.query('SELECT user_id FROM root.users WHERE password_hash = $1 AND email = $2', [passHashSent, email]);
+      const passHashSent = sha256(password);
+      const queryRes = await server.pg.query('SELECT user_id FROM root.users WHERE email = $1 AND password_hash = $2', [email, passHashSent]);
       !queryRes.rows.length && reply.status(403).send('Wrong password or user is not registered');
 
       const userId = queryRes.rows[0].user_id;

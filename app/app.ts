@@ -1,6 +1,6 @@
 import {fastify, FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import {registerRoutes} from './routes';
-import {envDev} from './envConfig';
+import {env} from './envConfig';
 import fastifyPostgres from 'fastify-postgres';
 
 export const server: FastifyInstance = fastify({
@@ -11,7 +11,7 @@ export const server: FastifyInstance = fastify({
 registerRoutes(server);
 server.register(fastifyPostgres);
 
-server.listen(envDev.port, (err: Error) => {
+server.listen(env.port, (err: Error) => {
   if (err) {
     server.log.error(err);
     process.exit(1);
