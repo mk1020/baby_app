@@ -25,7 +25,7 @@ export const users = async (server: FastifyInstance) => {
   server.get<{ Params: IParams }>(
     '/users/:id',
     usersSchemeGet,
-    async (request, reply) => 'user1' + request.params.id
+    async (request, reply) => 'test auto deploy'
   );
 
   server.post<{ Params: IParams, Body: IBody }>(
