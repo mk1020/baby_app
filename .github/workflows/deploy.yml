@@ -27,5 +27,5 @@ jobs:
           username: root
           passphrase: ${{secrets.PASSPHRASE}}
           key: ${{secrets.PRIVATE_KEY}}
-          source: "./dist/package.json"
-          target: "./baby_app"
+          source: "dist/package.json"
+          target: "test"
