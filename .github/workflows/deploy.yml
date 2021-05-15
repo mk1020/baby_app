@@ -33,7 +33,7 @@ jobs:
     - name: Server - npm install with new package.json
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: npm install
+        command: cd baby_app && npm install
         host: ${{ secrets.HOST }}
         username: root
         passphrase: ${{ secrets.PASSPHRASE }}
