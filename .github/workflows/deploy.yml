@@ -1,0 +1,31 @@
+# This is a basic workflow to help you get started with Actions
+
+name: deploy
+env: 
+  DEPLOY_PACKAGE_NAME: "DEPLOY-VER-${{github.sha}}"
+  NODE_VERSION: 14
+on: release
+
+jobs:
+  build-and-deploy:
+   runs-on: ubuntu-latest
+
+   steps:
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - uses: actions/checkout@v2
+    - name: npm install and build
+      run: |
+        npm install
+        npm run build
+    - name: deploy to scaleway
+    - name: ls -a via ssh
+      uses: garygrossgarten/github-action-ssh@release
+      with:
+        command: ls -a
+        host: ${{ secrets.HOST }}
+        username: root
+        passphrase: ${{ secrets.PASSPHRASE }}
+        privateKey: ${{ secrets.PRIVATE_KEY}}
