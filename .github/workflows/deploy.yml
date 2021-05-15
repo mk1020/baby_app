@@ -24,6 +24,5 @@ jobs:
         host: ${{ secrets.HOST }}
         username: root
         password: ${{ secrets.PASSPHRASE }}
-        key: ${{secrets.PRIVATE_KEY}}
         source: "./dist/package.json"
         target: "./baby_app/"
