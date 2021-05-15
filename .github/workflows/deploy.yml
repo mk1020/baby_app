@@ -28,5 +28,5 @@ jobs:
           passphrase: ${{secrets.PASSPHRASE}}
           key: ${{secrets.PRIVATE_KEY}}
           source: "dist/package.json"
-          target: "test"
-          rm: "true"
+          target: "baby_app"
+          strip_components: 1
