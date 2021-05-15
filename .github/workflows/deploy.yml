@@ -20,13 +20,31 @@ jobs:
         npm run build
     - name: ls dist
       run: ls -ltr ./dist
-    - name: transfer package.json
+    - name: transfer package.json to Server
       uses: appleboy/scp-action@master
       with:
-          host: ${{secrets.HOST}}
+          host: ${{ secrets.HOST }}
           username: root
-          passphrase: ${{secrets.PASSPHRASE}}
-          key: ${{secrets.PRIVATE_KEY}}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          key: ${{ secrets.PRIVATE_KEY }}
           source: "dist/package.json"
+          target: "baby_app"
+          strip_components: 1
+    - name: Server - npm install with new package.json
+      uses: garygrossgarten/github-action-ssh@release
+      with:
+        command: npm install
+        host: ${{ secrets.HOST }}
+        username: root
+        passphrase: ${{ secrets.PASSPHRASE }}
+        privateKey: ${{ secrets.PRIVATE_KEY}}
+    - name: transfer app.js to Server
+      uses: appleboy/scp-action@master
+      with:
+          host: ${{ secrets.HOST }}
+          username: root
+          passphrase: ${{ secrets.PASSPHRASE }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: "dist/app.js"
           target: "baby_app"
           strip_components: 1
