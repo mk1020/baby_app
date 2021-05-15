@@ -4,14 +4,14 @@ import {env} from './envConfig';
 import fastifyPostgres from 'fastify-postgres';
 
 export const server: FastifyInstance = fastify({
-  logger: false,
+  logger: true,
   ajv: {customOptions: {$data: true}}
 });
 
 registerRoutes(server);
 server.register(fastifyPostgres);
 
-server.listen(env.port, (err: Error) => {
+server.listen(env.port, env.host, (err: Error) => {
   if (err) {
     server.log.error(err);
     process.exit(1);
