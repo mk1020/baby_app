@@ -17,9 +17,19 @@ export const usersSchemePost: RouteShorthandOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['token'],
+      //required: ['token'],
       properties: {
-        token: {type: 'string'},
+        dateEnd: {type: 'number'},
+        conceptionDate: {type: 'number'},
+        lastMenstruationDate: {type: 'number'},
+        cycleDuration: {type: 'number', minimum: 20, maximum: 44},
+        gestationalAge: {
+          type: 'object',
+          properties: {
+            week: {type: 'number', minimum: 0, maximum: 42},
+            day: {type: 'number', minimum: 0, maximum: 6}
+          }
+        },
       },
     },
     response: {
