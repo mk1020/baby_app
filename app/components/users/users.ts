@@ -1,27 +1,17 @@
 import {FastifyInstance} from 'fastify';
-import {usersSchemeGet, usersSchemePost} from './routeSchemes';
+import {usersSchemePost} from './routeSchemes';
 
-interface IParams {
-  id: number
-}
-
-interface IBody {
-  dateEnd?: Date,
+interface IBodyPatch {
+  dateEnd?: number,
   gestationalAge?: {week: number, day: number},
-  conceptionDate?: Date,
-  lastMenstruationDate?: Date,
-  cycleDuration: number,
-  userId: number
+  conceptionDate?: number,
+  lastMenstruationDate?: number,
+  cycleDuration?: number,
+  userId: number,
 }
 
 export const users = async (server: FastifyInstance) => {
-  server.get<{ Params: IParams }>(
-    '/users/:id',
-    usersSchemeGet,
-    async (request, reply) => 'test auto deploy v2'
-  );
-
-  server.patch<{ Body: IBody }>(
+  server.patch<{ Body: IBodyPatch }>(
     '/users',
     usersSchemePost,
     async (req, reply) => {
@@ -44,7 +34,7 @@ export const users = async (server: FastifyInstance) => {
         reply.send();
       }
 
-      if (dateEnd) {
+      if (dateEnd !== undefined) {
         await server.pg.query(`UPDATE root.users SET pregnant_date_end = to_timestamp($1 / 1000.0), pregnant_date_start = to_timestamp($1/1000.0) - INTERVAL '280 days' WHERE id=$2`, [dateEnd, userId]);
         reply.send();
       }

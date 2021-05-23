@@ -13,7 +13,7 @@ export const usersSchemeGet: RouteShorthandOptions = {
   },
 };
 
-export const usersSchemePost: RouteShorthandOptions = {
+export const usersSchemePatch: RouteShorthandOptions = {
   schema: {
     body: {
       type: 'object',
@@ -30,6 +30,33 @@ export const usersSchemePost: RouteShorthandOptions = {
             day: {type: 'number', minimum: 0, maximum: 6}
           }
         },
+      },
+    },
+    response: {
+      200: {
+        type: 'string',
+      },
+    },
+  },
+};
+
+export const usersSchemePost: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      //required: ['token'],
+      properties: {
+        children: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: {type: 'string'},
+              gender: {enum: ['female', 'male']},
+              birthdate: {type: 'number'}
+            }
+          },
+        }
       },
     },
     response: {
