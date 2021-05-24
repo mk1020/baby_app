@@ -36,7 +36,7 @@ export const users = async (server: FastifyInstance) => {
         return reply.send();
       }
 
-      if (dateEnd !== undefined) {
+      if (dateEnd) {
         await server.pg.query(`UPDATE root.users SET pregnant_date_end = to_timestamp($1 / 1000.0), pregnant_date_start = to_timestamp($1/1000.0) - INTERVAL '280 days' WHERE id=$2`, [dateEnd, userId]);
         return reply.send();
       }

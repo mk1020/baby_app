@@ -36,7 +36,6 @@ export const children = async (server: FastifyInstance) => {
           await server.pg.query('COMMIT');
         } catch (e) {
           await server.pg.query('ROLLBACK');
-
         }
 
 
