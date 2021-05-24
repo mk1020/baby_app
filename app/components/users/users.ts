@@ -1,5 +1,6 @@
-import {FastifyInstance} from 'fastify';
-import {usersSchemePost} from './routeSchemes';
+import {FastifyInstance} from 'fastify'
+import {schemePatch} from './routeSchemes'
+import {checkToken} from '@/hooks'
 
 interface IBodyPatch {
   dateEnd?: number,
@@ -8,18 +9,19 @@ interface IBodyPatch {
   lastMenstruationDate?: number,
   cycleDuration?: number,
   userId: number,
+  deletePregnant: boolean
 }
 
 export const users = async (server: FastifyInstance) => {
   server.patch<{ Body: IBodyPatch }>(
     '/users',
-    usersSchemePost,
+    {schema: schemePatch, preHandler: checkToken},
     async (req, reply) => {
-      const {conceptionDate, dateEnd, gestationalAge, lastMenstruationDate, userId, cycleDuration} = req.body;
+      const {conceptionDate, dateEnd, gestationalAge, lastMenstruationDate, userId, cycleDuration, deletePregnant} = req.body;
 
       if (conceptionDate) {
         await server.pg.query(`UPDATE root.users SET pregnant_date_start = to_timestamp($1 / 1000.0), pregnant_date_end = to_timestamp($1 / 1000.0) + INTERVAL '266 days' WHERE users.id = $2`, [conceptionDate, userId]);
-        reply.send();
+        return reply.send();
       }
 
       if (lastMenstruationDate && cycleDuration) {
@@ -31,19 +33,24 @@ export const users = async (server: FastifyInstance) => {
         await server.pg.query(`UPDATE root.users SET pregnant_date_end = $1 WHERE id = $2`, [pregnantDateEnd.toISOString(), userId]);
         await server.pg.query(`UPDATE root.users SET pregnant_date_start = to_timestamp($1 / 1000.0) - INTERVAL '280 days' WHERE id=$2`, [pregnantDateEnd.getTime(), userId]);
         await server.pg.query('COMMIT');
-        reply.send();
+        return reply.send();
       }
 
       if (dateEnd !== undefined) {
         await server.pg.query(`UPDATE root.users SET pregnant_date_end = to_timestamp($1 / 1000.0), pregnant_date_start = to_timestamp($1/1000.0) - INTERVAL '280 days' WHERE id=$2`, [dateEnd, userId]);
-        reply.send();
+        return reply.send();
       }
 
       if (gestationalAge) {
         const gestationalAgeDays = gestationalAge.week * 7 + gestationalAge.day;
         const remainingTime = 40 * 7 - gestationalAgeDays;
         await server.pg.query(`UPDATE root.users SET pregnant_date_start = current_timestamp - INTERVAL '1 day' * $1::integer, pregnant_date_end= current_timestamp + INTERVAL '1 day' * $2::integer WHERE id=$3`, [gestationalAgeDays, remainingTime, userId]);
-        reply.send();
+        return reply.send();
+      }
+
+      if (deletePregnant) {
+        await server.pg.query(`UPDATE root.users SET pregnant_date_start = null, pregnant_date_end = null WHERE id=$1`, [userId]);
+        return reply.send();
       }
 
     }
