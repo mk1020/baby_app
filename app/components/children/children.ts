@@ -25,21 +25,23 @@ export const children = async (server: FastifyInstance) => {
 
       if (children) {
         const childIds: number[] = [];
-        try {
-          await server.pg.query('BEGIN');
+        await server.pg.query('BEGIN');
+        const queries = children.map(child => (
+          server.pg.query('INSERT INTO root.children (user_id, name, gender, birthdate) VALUES ($1, $2, $3, to_timestamp($4 / 1000.0)) RETURNING id', [userId, child.name, child.gender, child.birthdate])
+        ));
 
-          for (const child of children) {
-            const {rows} = await server.pg.query('INSERT INTO root.children (user_id, name, gender, birthdate) VALUES ($1, $2, $3, to_timestamp($4 / 1000.0)) RETURNING id', [userId, child.name, child.gender, child.birthdate]);
-            childIds.push(rows[0].id);
-          }
-
+        Promise.all(queries).then(async values => {
+          values.forEach(value =>  childIds.push(value.rows[0].id));
           await server.pg.query('COMMIT');
-        } catch (e) {
+        }).catch(async err => {
           await server.pg.query('ROLLBACK');
+        });
+
+        if (children.length === childIds.length) {
+          return reply.send(childIds);
+        } else {
+          return reply.status(500).send('Something went wrong');
         }
-
-
-        return reply.send(childIds);
       }
     });
 
