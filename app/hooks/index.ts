@@ -1,13 +1,12 @@
-import {isPrivateRoute} from '../routes';
 import {server} from '../app';
-import {preHandlerAsyncHookHandler, preHandlerHookHandler} from 'fastify/types/hooks';
+import {FastifyReply, FastifyRequest} from 'fastify';
 
 interface IBody {
    token?: string,
    userId?: number
 }
 
-export const checkToken: preHandlerAsyncHookHandler = async (req, reply) => {
+export const checkToken = async (req: FastifyRequest<{Body?: IBody, Params?: any}>, reply: FastifyReply) => {
   const token = req.body?.token;
 
   if (token) {

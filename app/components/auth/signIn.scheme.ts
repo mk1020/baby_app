@@ -1,5 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
-import {emailRegex, passRegex} from '../../common/validation/regex';
+import {emailRegex, passRegex} from '../../validation/regex';
 
 export const signInScheme: RouteShorthandOptions = {
   schema: {
