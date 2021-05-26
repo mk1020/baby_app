@@ -22,6 +22,9 @@ export const schemePost: FastifySchema = {
     200: {
       type: 'string',
     },
+    500: {
+      type: 'string'
+    }
   },
 };
 

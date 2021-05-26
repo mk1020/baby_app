@@ -1,13 +1,19 @@
 import {server} from '../app';
-import {FastifyReply, FastifyRequest} from 'fastify';
+import {FastifyReply, FastifyRequest, preHandlerAsyncHookHandler} from 'fastify';
+import {RawServerBase} from 'fastify/types/utils';
+import {RouteGenericInterface} from 'fastify/types/route';
+import {RequestGenericInterface} from 'fastify/types/request'
 
 interface IBody {
    token?: string,
    userId?: number
 }
-
-export const checkToken = async (req: FastifyRequest<{Body?: IBody, Params?: any}>, reply: FastifyReply) => {
-  const token = req.body?.token;
+interface IHeaders {
+  token?: string,
+  userId?: number
+}
+export const checkToken = async <A, B, C, RouteGeneric> (req: FastifyRequest<RouteGeneric & {Body?: IBody, Headers?: IHeaders}>, reply: FastifyReply) => {
+  const token = req.body?.token || req.headers?.token;
 
   if (token) {
     const {rows} = await server.pg.query('select user_id from root.users_access where token=$1', [token]);
@@ -15,7 +21,7 @@ export const checkToken = async (req: FastifyRequest<{Body?: IBody, Params?: any
       reply.status(401).send();
       return reply;
     }
-    req.body = {...req.body, userId: rows[0].user_id};
+    req.headers.userId = rows[0].user_id;
   } else {
     reply.status(401).send();
     return reply;
