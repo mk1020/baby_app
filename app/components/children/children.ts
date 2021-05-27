@@ -1,6 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import {schemeDelete, schemePost} from './routeSchemes';
 import {checkToken} from '@/hooks';
+import {QueryArrayResult, QueryResult} from 'pg';
 
 type TChild = {
   name: string,
@@ -21,23 +22,24 @@ export const children = async (server: FastifyInstance) => {
     '/children',
     {schema: schemePost, preHandler: checkToken},
     async (req, reply) => {
-      const {userId, children} = req.body;
+      const {children} = req.body;
+      const {userId} = req.headers;
 
+      console.log(children);
       if (children) {
-        const childIds: number[] = [];
         await server.pg.query('BEGIN');
         const queries = children.map(child => (
           server.pg.query('INSERT INTO root.children (user_id, name, gender, birthdate) VALUES ($1, $2, $3, to_timestamp($4 / 1000.0)) RETURNING id', [userId, child.name, child.gender, child.birthdate])
         ));
 
-        Promise.all(queries).then(async values => {
-          values.forEach(value =>  childIds.push(value.rows[0].id));
-          await server.pg.query('COMMIT');
-        }).catch(async err => {
-          await server.pg.query('ROLLBACK');
-        });
+        const res = await Promise.all(queries).catch(async err => await server.pg.query('ROLLBACK'));
+        console.log(res);
 
-        if (children.length === childIds.length) {
+        if (res) {
+          await server.pg.query('COMMIT');
+          const childIds: number[] = [];
+          (res as Array<any>).forEach(value =>  childIds.push(value.rows[0].id));
+
           return reply.send(childIds);
         } else {
           return reply.status(500).send('Something went wrong');
