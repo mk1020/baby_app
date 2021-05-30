@@ -17,8 +17,11 @@ interface IBodyPost {
 interface IParamsDelete {
   id: number
 }
+interface IHeaders {
+  userId: number
+}
 export const children = async (server: FastifyInstance) => {
-  server.post<{ Body: IBodyPost }>(
+  server.post<{ Body: IBodyPost, Headers: IHeaders }>(
     '/children',
     {schema: schemePost, preHandler: checkToken},
     async (req, reply) => {

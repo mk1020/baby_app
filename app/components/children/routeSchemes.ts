@@ -4,7 +4,6 @@ export const schemePost: FastifySchema = {
   body: {
     type: 'object',
     properties: {
-      userId: {type: 'number'},
       children: {
         type: 'array',
         items: {
