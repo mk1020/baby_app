@@ -35,14 +35,17 @@ export const children = async (server: FastifyInstance) => {
           server.pg.query('INSERT INTO root.children (user_id, name, gender, birthdate) VALUES ($1, $2, $3, to_timestamp($4 / 1000.0)) RETURNING id', [userId, child.name, child.gender, child.birthdate])
         ));
 
-        const res = await Promise.all(queries).catch(async err => await server.pg.query('ROLLBACK'));
-        console.log(res);
+        const childIds = await Promise.all(queries)
+          .then(async res => {
+            await server.pg.query('COMMIT');
+            return res.map(res => res.rows[0].id);
+          })
+          .catch(async err => {
+            await server.pg.query('ROLLBACK');
+            return [];
+          });
 
-        if (res) {
-          await server.pg.query('COMMIT');
-          const childIds: number[] = [];
-          (res as Array<any>).forEach(value =>  childIds.push(value.rows[0].id));
-
+        if (childIds.length) {
           return reply.send(childIds);
         } else {
           return reply.status(500).send('Something went wrong');
