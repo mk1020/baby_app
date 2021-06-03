@@ -31,7 +31,11 @@ jobs:
     - name: Server - npm install with new package.json
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: cd baby_app && npm install
+        script: |
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
+          cd baby_app
+          npm install
         host: ${{ secrets.HOST }}
         username: root
         passphrase: ${{ secrets.PASSPHRASE }}
