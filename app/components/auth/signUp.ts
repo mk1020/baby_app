@@ -16,8 +16,8 @@ export const signUp = async (server: FastifyInstance) => {
     async (req, reply) => {
       const {password, email} = req.body;
       const hash = sha256(password);
-      await server.pg.query('insert into root.users (email, password_hash) values ($1, $2)', [email, hash]);
-      reply.status(201).send();
+      const {rowCount} = await server.pg.query('insert into root.users (email, password_hash) values ($1, $2)', [email, hash]);
+      rowCount ? reply.status(201).send() : reply.status(500).send('failed to write to the database');
     }
   );
 };

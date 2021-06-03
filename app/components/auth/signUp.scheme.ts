@@ -27,6 +27,9 @@ export const signUpScheme: RouteShorthandOptions = {
       201: {
         type: 'string',
       },
+      500: {
+        type: 'string',
+      },
     },
   },
 };
