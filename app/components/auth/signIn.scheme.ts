@@ -19,7 +19,11 @@ export const signInScheme: RouteShorthandOptions = {
     },
     response: {
       200: {
-        type: 'string',
+        type: 'object',
+        properties: {
+          token: {type: 'string'},
+          userId: {type: 'number'},
+        }
       },
       403: {
         type: 'string'

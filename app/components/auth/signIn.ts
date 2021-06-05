@@ -25,7 +25,7 @@ export const signIn = async (server: FastifyInstance) => {
       const token = randomBytes(64).toString('hex');
 
       await server.pg.query(`INSERT INTO root.users_access VALUES ($1, $2, $3, current_timestamp + INTERVAL '1 month')`, [token, userId, device]);
-      reply.send();
+      reply.send({userId, token});
     }
   );
 };
