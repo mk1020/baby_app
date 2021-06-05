@@ -21,7 +21,7 @@ export const signIn = async (server: FastifyInstance) => {
       const queryRes = await server.pg.query('SELECT id FROM root.users WHERE email = $1 AND password_hash = $2', [email, passHashSent]);
       !queryRes.rows.length && reply.status(403).send('Wrong password or user is not registered');
 
-      const userId = queryRes.rows[0].user_id;
+      const userId = queryRes.rows[0].id;
       const token = randomBytes(64).toString('hex');
 
       await server.pg.query(`INSERT INTO root.users_access VALUES ($1, $2, $3, current_timestamp + INTERVAL '1 month')`, [token, userId, device]);
