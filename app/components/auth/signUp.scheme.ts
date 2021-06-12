@@ -1,35 +1,52 @@
-import {RouteShorthandOptions} from 'fastify';
+import {FastifySchema, RouteShorthandOptions} from 'fastify';
 import {emailRegex, passRegex} from '../../validation/regex';
 
-export const signUpScheme: RouteShorthandOptions = {
-  schema: {
-    body: {
-      type: 'object',
-      required: ['email', 'password', 'confirmPassword'],
-      properties: {
-        email: {
-          type: 'string',
-          pattern: emailRegex,
-        },
-        password: {
-          type: 'string',
-          pattern: passRegex,
-        },
-        confirmPassword: {
-          type: 'string',
-          const: {
-            $data: '1/password'
-          }
-        },
+export const signUpScheme: FastifySchema = {
+  body: {
+    type: 'object',
+    required: ['email', 'password', 'confirmPassword'],
+    properties: {
+      email: {
+        type: 'string',
+        pattern: emailRegex,
+      },
+      password: {
+        type: 'string',
+        pattern: passRegex,
+      },
+      confirmPassword: {
+        type: 'string',
+        const: {
+          $data: '1/password'
+        }
       },
     },
-    response: {
-      201: {
-        type: 'string',
-      },
-      500: {
-        type: 'string',
-      },
+  },
+  response: {
+    201: {
+      type: 'string',
+    },
+    500: {
+      type: 'string',
+    },
+  },
+};
+
+
+export const signUpConfirmScheme: FastifySchema = {
+  params: {
+    type: 'object',
+    required: ['code'],
+    properties: {
+      code: {type: 'string'}
+    },
+  },
+  response: {
+    200: {
+      type: 'string',
+    },
+    500: {
+      type: 'string',
     },
   },
 };

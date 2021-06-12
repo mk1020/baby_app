@@ -1,7 +1,7 @@
-import {fastify, FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
-import {isPrivateRoute, registerRoutes} from './routes';
-import {env} from './envConfig';
-import fastifyPostgres from 'fastify-postgres';
+import {fastify, FastifyInstance} from 'fastify'
+import {registerRoutes} from './routes'
+import {env} from './envConfig'
+import fastifyPostgres from 'fastify-postgres'
 
 export const server: FastifyInstance = fastify({
   logger: true,

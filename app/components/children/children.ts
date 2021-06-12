@@ -28,7 +28,6 @@ export const children = async (server: FastifyInstance) => {
       const {children} = req.body;
       const {userId} = req.headers;
 
-      console.log(children);
       if (children) {
         await server.pg.query('BEGIN');
         const queries = children.map(child => (

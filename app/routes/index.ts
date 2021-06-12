@@ -1,5 +1,5 @@
 import {FastifyInstance} from 'fastify';
-import {signUp} from '../components/auth/signUp';
+import {signUp, signUpConfirm} from '../components/auth/signUp'
 import {signIn} from '../components/auth/signIn';
 import {signOut} from '../components/auth/signOut';
 import {users} from '../components/users/users';
@@ -15,12 +15,5 @@ export const registerRoutes = (server: FastifyInstance) => {
   server.register(children);
   server.register(mainScreen);
   server.register(note);
-};
-
-export const isPrivateRoute = (route: string): boolean => {
-  switch (route) {
-  case '/signin': return false;
-  case '/signup': return false;
-  default: return true;
-  }
+  server.register(signUpConfirm);
 };
