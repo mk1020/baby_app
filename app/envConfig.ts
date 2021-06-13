@@ -1,5 +1,6 @@
 
 type TEnv = {
+  nodeEnv: string,
   port: string,
   passSalt: string,
   host: string,
@@ -11,6 +12,7 @@ type TEnv = {
 }
 
 export const env:TEnv = {
+  nodeEnv: process.env.NODE_ENV as string,
   port: process.env.PORT as string,
   host: process.env.HOST as string,
   passSalt: process.env.PASS_SALT as string,

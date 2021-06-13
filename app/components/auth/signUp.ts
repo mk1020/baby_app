@@ -4,6 +4,7 @@ import {sha256} from './assistant';
 import {createTransport} from 'nodemailer';
 import {SMTPOpt} from '@/assist/mail';
 import {randomBytes} from 'crypto';
+import {env} from '@/envConfig';
 
 interface IBody {
    email: string
@@ -23,14 +24,13 @@ export const signUp = async (server: FastifyInstance) => {
 
       if (rowCount) {
         const transporter = createTransport(SMTPOpt);
-        const link = 'http://localhost:3000/confirm-email/' + linkCode;
+        const link = `http://${env.nodeEnv === 'dev' ? 'localhost:3000' : '51.15.71.195'}/confirm-email/` + linkCode;
         const mailOptions = {
           to: email,
           subject: 'Confirmation of registration',
           html: `<h3>Hello.</h3> <p>Please click on the <a href=${link}><b>link</b></a> to confirm your registration.</p>`
         };
         const sent = await transporter.sendMail(mailOptions);
-        console.log('sent', sent);
         if (sent) {
           return reply.status(201).send('An email has been sent to your email address');
         } else {
