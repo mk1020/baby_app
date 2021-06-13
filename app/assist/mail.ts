@@ -1,8 +1,8 @@
-import * as SMTPTransport from 'nodemailer/lib/smtp-transport'
-import {env} from '@/envConfig'
+import * as SMTPTransport from 'nodemailer/lib/smtp-transport';
+import {env} from '@/envConfig';
 
 export const SMTPOpt: SMTPTransport.Options = {
-  service: 'gmail',
+  service: 'Gmail',
   auth: {
     type: 'OAuth2',
     user: env.mailUserName,
@@ -12,3 +12,4 @@ export const SMTPOpt: SMTPTransport.Options = {
     accessToken: env.mailAccessToken
   }
 };
+console.log('this is LOGI:', SMTPOpt);

@@ -1,11 +1,9 @@
 import {FastifyInstance} from 'fastify';
-import {signUpConfirmScheme, signUpScheme} from './signUp.scheme'
+import {signUpConfirmScheme, signUpScheme} from './signUp.scheme';
 import {sha256} from './assistant';
 import {createTransport} from 'nodemailer';
-import * as SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {SMTPOpt} from '@/assist/mail';
 import {randomBytes} from 'crypto';
-import {schemePost} from '@/components/children/routeSchemes';
 
 interface IBody {
    email: string
@@ -32,7 +30,7 @@ export const signUp = async (server: FastifyInstance) => {
           html: `<h3>Hello.</h3> <p>Please click on the <a href=${link}><b>link</b></a> to confirm your registration.</p>`
         };
         const sent = await transporter.sendMail(mailOptions);
-
+        console.log('sent', sent);
         if (sent) {
           return reply.status(201).send('An email has been sent to your email address');
         } else {
