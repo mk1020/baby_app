@@ -22,7 +22,9 @@ export const signUp = async (server: FastifyInstance) => {
       const {rowCount} = await server.pg.query('insert into root.users (email, password_hash, code) values ($1, $2, $3)', [email, hash, linkCode]);
 
       if (rowCount) {
+        console.log('createTransport1');
         const transporter = createTransport(SMTPOpt);
+        console.log('createTransport2');
         const link = 'http://localhost:3000/confirm-email/' + linkCode;
         const mailOptions = {
           to: email,

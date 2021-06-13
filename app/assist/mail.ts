@@ -3,6 +3,7 @@ import {env} from '@/envConfig';
 
 export const SMTPOpt: SMTPTransport.Options = {
   service: 'Gmail',
+  port: 2525,
   auth: {
     type: 'OAuth2',
     user: env.mailUserName,
