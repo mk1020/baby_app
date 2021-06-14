@@ -22,7 +22,7 @@ export const passRecovery = async (server: FastifyInstance) => {
       const {email} = req.body;
 
       const recoveryCode = Math.floor(Math.random() * 10000000).toString();
-      const {rowCount} = await server.pg.query('UPDATE root.users SET code = $1 WHERE email = $2', [recoveryCode, email]);
+      const {rowCount} = await server.pg.query('UPDATE root.users SET code = $1 WHERE email = $2 AND confirmed = true', [recoveryCode, email]);
 
       if (rowCount) {
         const transporter = createTransport(SMTPOpt);
@@ -39,7 +39,7 @@ export const passRecovery = async (server: FastifyInstance) => {
           return reply.status(500).send('Couldn\'t send email.');
         }
       } else {
-        return reply.status(500).send('Failed to write to the database');
+        return reply.status(403).send('The user with such mail is not registered or the account is not confirmed. Please check your email');
       }
     });
 
