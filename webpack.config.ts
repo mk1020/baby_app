@@ -5,7 +5,6 @@ import {externals} from './dev-helpers/dependencies';
 
 export default {
   target: 'node',
-  mode: 'production',
   entry: resolve('app/app.ts'),
   output: {
     path: resolve('dist'),

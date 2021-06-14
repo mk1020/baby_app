@@ -20,5 +20,5 @@ export const env:TEnv = {
   mailClientId: process.env.MAIL_OAUTH_CLIENTID as string,
   mailClientSecret: process.env.MAIL_OAUTH_CLIENT_SECRET as string,
   mailRefreshToken: process.env.MAIL_OAUTH_REFRESH_TOKEN as string,
-  mailAccessToken: process.env.MAIL_OAUTH_ACCESS_TOKEN as string
+  mailAccessToken: process.env.MAIL_OAUTH_ACCESS_TOKEN as string,
 };
