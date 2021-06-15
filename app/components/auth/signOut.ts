@@ -18,15 +18,15 @@ export const options: FastifySchema = {
     }
   },
 };
-interface IBody {
+interface IHeaders {
    token: string
 }
 export const signOut = async (server: FastifyInstance) => {
-  server.delete<{Body: IBody}>(
-    '/signout',
+  server.delete<{Headers: IHeaders}>(
+    '/signOut',
     {schema: options, preValidation: checkToken},
     async (req, reply) => {
-      const {rowCount} = await server.pg.query('delete from root.users_access where token = $1 AND expires > current_timestamp', [req.body.token]);
+      const {rowCount} = await server.pg.query('delete from root.users_access where token = $1 AND expires > current_timestamp', [req.headers.token]);
 
       rowCount ? reply.send(false) : reply.status(500).send(true);
     }

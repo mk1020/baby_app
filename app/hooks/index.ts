@@ -2,7 +2,7 @@ import {server} from '../app';
 import {FastifyReply, FastifyRequest, preHandlerAsyncHookHandler} from 'fastify';
 import {RawServerBase} from 'fastify/types/utils';
 import {RouteGenericInterface} from 'fastify/types/route';
-import {RequestGenericInterface} from 'fastify/types/request'
+import {RequestGenericInterface} from 'fastify/types/request';
 
 interface IBody {
    token?: string,
