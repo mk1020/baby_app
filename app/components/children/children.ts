@@ -23,7 +23,7 @@ interface IHeaders {
 export const children = async (server: FastifyInstance) => {
   server.post<{ Body: IBodyPost, Headers: IHeaders }>(
     '/children',
-    {schema: schemePost, preHandler: checkToken},
+    {schema: schemePost, preValidation: checkToken},
     async (req, reply) => {
       const {children} = req.body;
       const {userId} = req.headers;
@@ -54,7 +54,7 @@ export const children = async (server: FastifyInstance) => {
 
   server.delete<{ Params: IParamsDelete }>(
     '/children/:id',
-    {schema: schemeDelete, preHandler: checkToken},
+    {schema: schemeDelete, preValidation: checkToken},
     async (req, reply) => {
       const {id} = req.params;
 

@@ -9,7 +9,7 @@ interface IHeaders {
 export const mainScreen = async (server: FastifyInstance) => {
   server.get<{ Headers: IHeaders }>(
     '/mainScreen',
-    {schema: schemeGet, preHandler: checkToken},
+    {schema: schemeGet, preValidation: checkToken},
     async (req, reply) => {
       const {userId} = req.headers;
 

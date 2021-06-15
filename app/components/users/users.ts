@@ -15,7 +15,7 @@ interface IBodyPatch {
 export const users = async (server: FastifyInstance) => {
   server.patch<{ Body: IBodyPatch }>(
     '/users',
-    {schema: schemePatch, preHandler: checkToken},
+    {schema: schemePatch, preValidation: checkToken},
     async (req, reply) => {
       const {conceptionDate, dateEnd, gestationalAge, lastMenstruationDate, userId, cycleDuration, deletePregnant} = req.body;
 

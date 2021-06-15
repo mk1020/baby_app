@@ -13,7 +13,7 @@ interface IHeaders {
   userId?: number
 }
 export const checkToken = async <A, B, C, RouteGeneric> (req: FastifyRequest<RouteGeneric & {Body?: IBody, Headers?: IHeaders}>, reply: FastifyReply) => {
-  const token = req.body?.token || req.headers?.token;
+  const token = req.headers?.token;
 
   if (token) {
     const {rows} = await server.pg.query('select user_id from root.users_access where token=$1 AND expires > current_timestamp', [token]);

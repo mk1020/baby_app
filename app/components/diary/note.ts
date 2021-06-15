@@ -11,7 +11,7 @@ interface IHeaders {
 export const note = async (server: FastifyInstance) => {
   server.post<{ Body: INoteBodyPost, Headers: IHeaders }>(
     '/diary-note',
-    {schema: noteSchemePost, preHandler: checkToken},
+    {schema: noteSchemePost, preValidation: checkToken},
     async (req, reply) => {
       const {userId} = req.headers;
       const {note} = req.body;
@@ -53,7 +53,7 @@ export const note = async (server: FastifyInstance) => {
 
   server.patch<{ Body: INoteBodyPatch, Headers: IHeaders }>(
     '/diary-note',
-    {schema: noteSchemePost, preHandler: checkToken},
+    {schema: noteSchemePost, preValidation: checkToken},
     async (req, reply) => {
       const {userId} = req.headers;
       const {note} = req.body;
