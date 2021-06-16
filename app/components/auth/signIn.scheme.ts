@@ -21,13 +21,22 @@ export const signInScheme: RouteShorthandOptions = {
       200: {
         type: 'object',
         properties: {
-          token: {type: 'string'},
+          token: {
+            type: 'object',
+            properties: {
+              token: {type: 'string'},
+              expires: {type: 'string'}
+            }
+          },
           userId: {type: 'number'},
         }
       },
       403: {
         type: 'string'
-      }
+      },
+      500: {
+        type: 'string'
+      },
     },
   },
 };
