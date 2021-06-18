@@ -1,6 +1,6 @@
-import {FastifyInstance} from 'fastify'
-import {schemePatch} from './routeSchemes'
-import {checkToken} from '@/hooks'
+import {FastifyInstance} from 'fastify';
+import {schemePatch} from './routeSchemes';
+import {checkToken} from '@/hooks';
 
 interface IBodyPatch {
   dateEnd?: number,

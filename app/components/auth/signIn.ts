@@ -3,6 +3,7 @@ import {signInScheme} from './signIn.scheme';
 import {env} from '../../envConfig';
 import {randomBytes} from 'crypto';
 import {sha256} from './assistant';
+import {addNewToken} from '@/components/users/token';
 
 interface IBody {
    email: string
@@ -13,7 +14,7 @@ interface IBody {
 export const signIn = async (server: FastifyInstance) => {
   server.post<{Body: IBody}>(
     '/signin',
-    signInScheme,
+    {schema: signInScheme},
     async (req, reply) => {
       const {email, password, device = 'mobile'} = req.body;
 
@@ -22,14 +23,15 @@ export const signIn = async (server: FastifyInstance) => {
       !queryRes.rows.length && reply.status(403).send('Wrong password or user is not registered');
 
       const userId = queryRes.rows[0].id;
-      const token = randomBytes(64).toString('hex');
+      const token = await addNewToken(server, userId, device);
 
-      const {rows} = await server.pg.query(`INSERT INTO root.users_access VALUES ($1, $2, $3, current_timestamp + INTERVAL '1 month') RETURNING expires`, [token, userId, device]);
-
-      if (rows.length) {
-        reply.send({userId, token: {token, expires: rows[0].expires}});
+      if (token) {
+        return reply
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .status(201)
+          .send({userId, token});
       } else {
-        reply.status(500).send();
+        return reply.status(500).send();
       }
     }
   );

@@ -1,18 +1,13 @@
 import {server} from '../app';
-import {FastifyReply, FastifyRequest, preHandlerAsyncHookHandler} from 'fastify';
-import {RawServerBase} from 'fastify/types/utils';
-import {RouteGenericInterface} from 'fastify/types/route';
-import {RequestGenericInterface} from 'fastify/types/request';
+import {FastifyReply, FastifyRequest} from 'fastify';
+import {IToken} from '@/components/users/token';
+import {string} from 'pg-format';
 
-interface IBody {
-   token?: string,
-   userId?: number
-}
 interface IHeaders {
   token?: string,
   userId?: number
 }
-export const checkToken = async <A, B, C, RouteGeneric> (req: FastifyRequest<RouteGeneric & {Body?: IBody, Headers?: IHeaders}>, reply: FastifyReply) => {
+export const checkToken = async <A, B, C, RouteGeneric> (req: FastifyRequest<RouteGeneric & {Headers?: IHeaders}>, reply: FastifyReply) => {
   const token = req.headers?.token;
 
   if (token) {

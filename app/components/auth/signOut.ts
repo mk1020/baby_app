@@ -28,7 +28,7 @@ export const signOut = async (server: FastifyInstance) => {
     async (req, reply) => {
       const {rowCount} = await server.pg.query('delete from root.users_access where token = $1 AND expires > current_timestamp', [req.headers.token]);
 
-      rowCount ? reply.send(false) : reply.status(500).send(true);
+      rowCount ? reply.send(true) : reply.status(500).send(false);
     }
   );
 };
