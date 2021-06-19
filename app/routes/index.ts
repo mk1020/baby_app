@@ -7,7 +7,8 @@ import {children} from '@/components/children/children';
 import {mainScreen} from '@/components/mainScreen/mainScreen';
 import {note} from '@/components/diary/note';
 import {passRecovery} from '@/components/users/passRecovery';
-import {token} from '@/components/users/token'
+import {token} from '@/components/users/token';
+import {oAuth} from '@/components/auth/oAuth';
 
 export const registerRoutes = (server: FastifyInstance) => {
   server.register(signUp);
@@ -20,4 +21,5 @@ export const registerRoutes = (server: FastifyInstance) => {
   server.register(signUpConfirm);
   server.register(passRecovery);
   server.register(token);
+  server.register(oAuth);
 };

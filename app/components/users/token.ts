@@ -16,10 +16,13 @@ interface IBody {
   device?: string
 }
 
-export const addNewToken = async (server: FastifyInstance, userId: number, device: string): Promise<IToken | null> => {
+export const addNewToken = async (server: FastifyInstance, userId: number, device = 'mobile'): Promise<IToken | null> => {
   const token = randomBytes(64).toString('hex');
   const {rows} = await server.pg.query(`INSERT INTO root.users_access VALUES ($1, $2, $3, current_timestamp + INTERVAL '1 month') RETURNING token, expires`, [token, userId, device]);
-  return rows.length ? rows[0] : null;
+  if (rows.length) {
+    return rows[0];
+  }
+  return Promise.reject('Error writing to the database by create user session');
 };
 export const token = async (server: FastifyInstance) => {
   server.post<{ Headers: IHeaders, Body: IBody }>(

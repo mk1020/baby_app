@@ -1,0 +1,30 @@
+import {FastifySchema} from 'fastify';
+import {emailRegex, passRegex} from '../../validation/regex';
+
+export const oAuthGoogleScheme: FastifySchema = {
+  body: {
+    type: 'object',
+    required: ['oAuthIdToken'],
+    properties: {
+      oAuthIdToken: {type: 'string'}
+    },
+  },
+  response: {
+    201: {
+      type: 'object',
+      properties: {
+        token: {
+          type: 'object',
+          properties: {
+            token: {type: 'string'},
+            expires: {type: 'string'}
+          }
+        },
+        userId: {type: 'number'},
+      }
+    },
+    500: {
+      type: 'string'
+    },
+  },
+};
