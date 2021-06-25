@@ -1,91 +1,172 @@
 import {FastifyInstance} from 'fastify';
+import {signUpConfirmScheme} from '@/components/auth/signUp.scheme';
+import {INote} from '@/components/diary/types';
 import {checkToken} from '@/hooks';
-import {INote, INoteBodyPatch, INoteBodyPost, INoteEditable} from '@/components/diary/types';
-import {noteSchemePost} from '@/components/diary/note.scheme';
-import {allFieldNote, fieldsNoteByType, queryByNoteField} from '@/components/diary/assistant';
+import {checkANDPrepareNote} from '@/components/diary/assistant';
+import {noteSyncSchemePost} from '@/components/diary/note.scheme';
+
+type ChangesByEvents = {
+  created: INote[],
+  updated: INote[],
+  deleted: string[],
+}
+type Changes = {
+  // eslint-disable-next-line camelcase
+  [table_name: string]: ChangesByEvents
+}
 
 interface IHeaders {
   userId: number
+  token: string
 }
-
+interface IQuerystringPull {
+  diaryId: number
+  lastPulledAt: number | null
+  schemaVersion: number
+  migration: null | { from: number, tables: string[], columns: { table: string, columns: string[] }[] }
+}
+interface IQuerystringPush {
+  diaryId: number
+  lastPulledAt: number
+}
+interface IBodyPush {
+  changes: Changes
+}
+const tableName = 'notes';
+enum Events {
+  created='created',
+  updated = 'updated',
+  deleted = 'deleted'
+}
 export const note = async (server: FastifyInstance) => {
-  server.post<{ Body: INoteBodyPost, Headers: IHeaders }>(
-    '/diary-note',
-    {schema: noteSchemePost, preValidation: checkToken},
+  server.get<{Querystring: IQuerystringPull, Headers: IHeaders}>(
+    '/note/sync',
+    {preValidation: checkToken},
     async (req, reply) => {
-      const {userId} = req.headers;
-      const {note} = req.body;
+      const {diaryId} = req.query;
+      let {lastPulledAt} = req.query;
+      lastPulledAt === undefined && (lastPulledAt = null);
 
-      const noteFields = fieldsNoteByType[note.noteType];
-      const noteValues = [];
-      const noteEditDateISO: Record<string, unknown> | INoteEditable<string> = {};
+      await server.pg.query('BEGIN');
+      const {rows: created} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND server_deleted_at is NULL AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
+      const {rows: updated} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND server_deleted_at is NULL AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
+      const {rows: deleted} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
+      await server.pg.query('COMMIT');
 
-      for (const field of noteFields) {
-        if (!note[field]) {
-          return reply.status(422).send(`${field} field contains an error or was not passed.`);
+      const deletedIds = deleted.map(note => note.id);
+      const changes: Changes = {
+        [tableName]: {
+          created,
+          updated,
+          deleted: deletedIds
         }
+      };
+      return reply.send({changes, timestamp: new Date().getTime()});
+    });
 
-        if (field !== 'editDate' && field !== 'id') {
-          noteValues.push(note[field]);
-          if (field !== 'diaryId') {
+  server.post<{Querystring: IQuerystringPush, Headers: IHeaders, Body: IBodyPush}>(
+    '/note/sync',
+    {schema: noteSyncSchemePost, preValidation: checkToken},
+    async (req, reply) => {
+      const {lastPulledAt, diaryId} = req.query;
+      const {changes} = req.body;
+      const changesByEvents = changes[tableName];
 
-            if (note['editDate'][field]) {
-              noteEditDateISO[field] = new Date(note['editDate'][field]).toISOString();
+      try {
+        if (changesByEvents) {
+          //created and updated
+          const notes = [...changesByEvents[Events.created], ...changesByEvents[Events.updated]];
+
+          await server.pg.query('BEGIN');
+          let processedNotes = 0;
+          for (const note of notes) {
+            const _ = checkANDPrepareNote(note);
+            const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.notes WHERE id=$1`, [_.id]);
+            const currNote = rows[0];
+            //if changed between user's pull and push calls
+            if (currNote) {
+              const serverUpdatedAt = new Date(currNote.server_updated_at).getTime();
+              const serverDeletedAt = new Date(currNote.server_deleted_at).getTime();
+              if (serverDeletedAt > lastPulledAt || serverUpdatedAt > lastPulledAt) {
+                throw new Error('DOCUMENT_WAS_MODIFIED_OR_UPDATE_ERROR');
+              }
+              console.log('currNote.server_updated_at', currNote.server_updated_at);
+              console.log('serverUpdatedAt', new Date(currNote.server_updated_at));
+            }
+
+
+            if (currNote?.server_deleted_at === null || !currNote) {
+              const {rowCount} = await server.pg.query<INote>(
+                `INSERT INTO root.notes
+                 VALUES ($1, $2, now(), now(), null, to_timestamp($3 / 1000.0),
+                         to_timestamp($4 / 1000.0), $5,
+                         $6, $7, $8, $9, $10, $11, $12,
+                         $13, $14, $15, $16, $17, $18, $19,
+                         $20, $21, $22)
+                 ON CONFLICT (id) DO UPDATE SET diary_id          = $2,
+                                                server_created_at = now(),
+                                                server_updated_at = now(),
+                                                server_deleted_at = null,
+                                                created_at        = to_timestamp($3 / 1000.0),
+                                                updated_at        = to_timestamp($4 / 1000.0),
+                                                note_type         = $5,
+                                                date_event_start  = now(),
+                                                date_event_end    = now(),
+                                                photo             = $8,
+                                                food              = $9,
+                                                volume            = $10,
+                                                note              = $11,
+                                                duration          = $12,
+                                                milk_volume_left  = $13,
+                                                milk_volume_right = $14,
+                                                type              = $15,
+                                                achievement       = $16,
+                                                weight            = $17,
+                                                growth            = $18,
+                                                head_circle       = $19,
+                                                temp              = $20,
+                                                tags              = $21,
+                                                pressure          = $22;`,
+                [
+                  _.id, _.diaryId, _.createdAt, _.updatedAt, _.noteType,
+                  _.dateEventStart, _.dateEventEnd, _.photo, _.food,
+                  _.volume, _.note, _.duration, _.milkVolumeRight,
+                  _.milkVolumeLeft, _.type, _.achievement, _.weight,
+                  _.growth, _.headCircle, _.temp, _.tags, _.pressure
+                ]
+              );
+
+              if (rowCount) {
+                processedNotes++;
+              } else {
+                throw new Error(`The changes object contains a record that has been modified on the server after lastPulledAt, her id=${_.id}`);
+              }
             } else {
-              return reply.status(422).send(`editDate: ${field} field contains an error or was not passed.`);
+              throw new Error(`The changes object contains a record with id=${currNote.id} that was deleted`);
             }
           }
-        }
-      }
 
-      await server.pg.query('INSERT INTO root.diary_note (edit_date, diary_id, note_type, date_event_start, date_event_end, photo, food, note) VALUES ($1, $2, $3, to_timestamp($4 / 1000.0), to_timestamp($5 / 1000.0), $6, $7, $8)', [noteEditDateISO, ...noteValues]);
-      return reply.send();
-    }
-  );
-
-  /*
-      * description
-      * фронт должен слать обязательные поля: id, diaryId и editDate
-      * и ТОЛЬКО те поля, которые обновились.
-      * В editDate должны быть даты ВСЕХ обновившихся полей! Пример: {note: timestamp}
-      *
-  */
-
-  server.patch<{ Body: INoteBodyPatch, Headers: IHeaders }>(
-    '/diary-note',
-    {schema: noteSchemePost, preValidation: checkToken},
-    async (req, reply) => {
-      const {userId} = req.headers;
-      const {note} = req.body;
-      const noteEditableKeys = new Set(Object.keys(note)) as Set<keyof INote>;
-      noteEditableKeys.delete('id');
-      noteEditableKeys.delete('diaryId');
-      noteEditableKeys.delete('editDate');
-
-      const queryExecutingErrLog = [];
-      await server.pg.query('BEGIN');
-      for (const key of noteEditableKeys as Set<Exclude<keyof INote, 'id' | 'diaryId' | 'editDate'>>) {
-        if (allFieldNote.has(key) && note[key]) {
-          if (note['editDate'][key]) {
-            const dateChangeField = new Date(note['editDate'][key]).toISOString();
-            //const sql = format(`UPDATE root.diary_note SET %I = %L WHERE id = 3`, 'note', 'food', 'photo');
-            const {rowCount} = await server.pg.query(queryByNoteField[key], [dateChangeField, note[key], note['id'], note['diaryId']]);
-            !rowCount &&
-              queryExecutingErrLog.push(`UPDATING field ${key}: Something went wrong. May be edit date ${key} is less than the date of this key in the database`);
-          } else {
-            return reply.status(422).send(`editDate: ${key} field is incorrect or missing`);
+          //deleted
+          let processedDeletes = 0;
+          for (const idDeleted of changesByEvents[Events.deleted]) {
+            const {rowCount: deleted} = await server.pg.query<INote>(`UPDATE root.notes SET server_deleted_at=now() WHERE id = $1`, [idDeleted]);
+            deleted && processedDeletes++;
           }
-        } else {
-          return reply.status(422).send(`${key} field is incorrect or his value is null or undefined`);
-        }
-      }
 
-      if (queryExecutingErrLog.length === 0) {
-        await server.pg.query('COMMIT');
-        return reply.send();
-      } else {
+          if (processedNotes === notes.length && processedDeletes <= changesByEvents[Events.deleted].length) {
+            await server.pg.query('COMMIT');
+            return reply.send();
+          } else {
+            throw new Error();
+          }
+        }
+      } catch (e) {
         await server.pg.query('ROLLBACK');
-        return reply.status(500).send(queryExecutingErrLog);
+        return reply.status(500).send(e);
       }
     });
 };
+//TODO В частности, убедитесь, что нет записи с last_modified равным или большим чем NOW(), и, если есть, увеличьте новую метку времени на 1....
+//https://nozbe.github.io/WatermelonDB/Advanced/Sync.html
+//TODO You should perform all queries synchronously or in a write lock to ensure that returned changes are consistent
+//todo миграции базы..

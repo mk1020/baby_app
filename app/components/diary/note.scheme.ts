@@ -1,34 +1,97 @@
 import {FastifySchema} from 'fastify';
+import {emailRegex, noteIdRegex} from '@/validation/regex';
 
-export const noteSchemePost: FastifySchema = {
+//todo везде подобавлять в схему хедеры с токеном
+/* eslint-disable camelcase */
+export const noteSyncSchemePost: FastifySchema = {
+  headers: {
+    type: 'object',
+    required: ['token'],
+    properties: {
+      token: {type: 'string'}
+    }
+  },
   body: {
     type: 'object',
-    required: ['note'],
+    required: ['changes'],
     properties: {
-      note: {
+      changes: {
         type: 'object',
-        required: ['diaryId', 'noteType', 'id'],
+        required: ['notes'],
         properties: {
-          diaryId: {type: 'number'},
-          id: {type: 'number'},
-          noteType: {type: 'number'},
-          dateEventStart: {type: 'number'},
-          dateEventEnd: {type: 'number'},
-          photo: {type: 'string'},
-          food: {type: 'string'},
-          volume: {type: 'string'},
-          note: {type: 'string'},
-          duration: {type: 'string'},
-          milkVolumeLeft: {type: 'string'},
-          milkVolumeRight: {type: 'string'},
-          type: {type: 'string'},
-          achievement: {type: 'string'},
-          weight: {type: 'string'},
-          growth: {type: 'string'},
-          headCircle: {type: 'string'},
-          temp: {type: 'string'},
-          tags: {type: 'string'},
-          pressure: {type: 'string'},
+          notes: {
+            type: 'object',
+            required: ['created', 'updated', 'deleted'],
+            properties: {
+              created: {
+                type: 'array',
+                minItems: 0,
+                items: {
+                  type: 'object',
+                  required: ['diary_id', 'note_type', 'id'],
+                  properties: {
+                    diary_id: {type: 'number'},
+                    id: {type: 'string', pattern: noteIdRegex},
+                    note_type: {type: 'number'},
+                    date_event_start: {type: 'number'},
+                    date_event_end: {type: 'number'},
+                    photo: {type: 'string'},
+                    food: {type: 'string'},
+                    volume: {type: 'string'},
+                    note: {type: 'string'},
+                    duration: {type: 'string'},
+                    milk_volume_left: {type: 'string'},
+                    milk_volume_right: {type: 'string'},
+                    type: {type: 'string'},
+                    achievement: {type: 'string'},
+                    weight: {type: 'string'},
+                    growth: {type: 'string'},
+                    head_circle: {type: 'string'},
+                    temp: {type: 'string'},
+                    tags: {type: 'string'},
+                    pressure: {type: 'string'},
+                  }
+                },
+              },
+              updated: {
+                type: 'array',
+                minItems: 0,
+                items: {
+                  type: 'object',
+                  required: ['diary_id', 'note_type', 'id'],
+                  properties: {
+                    diary_id: {type: 'number'},
+                    id: {type: 'string', pattern: noteIdRegex},
+                    note_type: {type: 'number'},
+                    date_event_start: {type: 'number'},
+                    date_event_end: {type: 'number'},
+                    photo: {type: 'string'},
+                    food: {type: 'string'},
+                    volume: {type: 'string'},
+                    note: {type: 'string'},
+                    duration: {type: 'string'},
+                    milk_volume_left: {type: 'string'},
+                    milk_volume_right: {type: 'string'},
+                    type: {type: 'string'},
+                    achievement: {type: 'string'},
+                    weight: {type: 'string'},
+                    growth: {type: 'string'},
+                    head_circle: {type: 'string'},
+                    temp: {type: 'string'},
+                    tags: {type: 'string'},
+                    pressure: {type: 'string'},
+                  }
+                },
+              },
+              deleted: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  minItems: 0
+                },
+              }
+            }
+          }
         }
       },
     },
@@ -37,9 +100,8 @@ export const noteSchemePost: FastifySchema = {
     200: {
       type: 'string',
     },
-    422: {
+    500: {
       type: 'string'
     }
   },
 };
-//todo сделать схему для patch

@@ -34,9 +34,6 @@ export const signUpScheme: FastifySchema = {
 
 
 export const signUpConfirmScheme: FastifySchema = {
-  querystring: {
-    code: {type: 'string'}
-  },
   response: {
     200: {
       type: 'string',

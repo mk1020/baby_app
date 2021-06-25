@@ -21,10 +21,33 @@ export interface INoteEditable<T> {
   pressure: [T] extends [never] ? string : T
 }
 
-export interface INote<NoteEditDate=number> extends INoteEditable<never>{
-  id?: number,
-  diaryId: number,
-  editDate: INoteEditable<NoteEditDate>,
+/* eslint-disable camelcase */
+export interface INote {
+  id: string,
+  diary_id: number,
+  server_created_at: number,
+  server_updated_at: number,
+  server_deleted_at: number,
+  created_at: number,
+  updated_at: number,
+  note_type:  TNoteType,
+  date_event_start: number | null,
+  date_event_end: number | null,
+  photo: string | null,
+  food: string | null,
+  volume: string | null,
+  note: string | null,
+  duration: string | null,
+  milk_volume_left: string | null,
+  milk_volume_right: string | null,
+  type: string | null,
+  achievement: string | null,
+  weight: string | null,
+  growth: string | null,
+  head_circle: string | null,
+  temp: number | null,
+  tags: string | null,
+  pressure: string | null,
 }
 
 export interface INoteBodyPost {
