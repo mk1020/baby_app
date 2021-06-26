@@ -1,8 +1,8 @@
-import {FastifyInstance} from 'fastify';
-import {INote} from '@/components/diary/types';
-import {checkToken} from '@/hooks';
-import {checkANDPrepareNote} from '@/components/diary/assistant';
-import {noteSyncSchemePost} from '@/components/diary/note.scheme';
+import {FastifyInstance} from 'fastify'
+import {INote} from '@/components/diary/types'
+import {checkToken} from '@/hooks'
+import {createOrUpdateNote, prepareNote} from '@/components/diary/assistant'
+import {noteSyncSchemePost} from '@/components/diary/note.scheme'
 
 type ChangesByEvents = {
   created: INote[],
@@ -78,8 +78,8 @@ export const note = async (server: FastifyInstance) => {
           await server.pg.query('BEGIN');
           let processedNotes = 0;
           for (const note of notes) {
-            const _ = checkANDPrepareNote(note);
-            const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.notes WHERE id=$1`, [_.id]);
+            const preparedNote = prepareNote(note);
+            const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.notes WHERE id=$1`, [preparedNote.id]);
             const currNote = rows[0];
             //if changed between user's pull and push calls
             if (currNote) {
@@ -90,52 +90,13 @@ export const note = async (server: FastifyInstance) => {
               }
             }
 
-
             if (currNote?.server_deleted_at === null || !currNote) {
-              const {rowCount} = await server.pg.query<INote>(
-                `INSERT INTO root.notes
-                 VALUES ($1, $2, now(), now(), null, to_timestamp($3 / 1000.0),
-                         to_timestamp($4 / 1000.0), $5,
-                         $6, $7, $8, $9, $10, $11, $12,
-                         $13, $14, $15, $16, $17, $18, $19,
-                         $20, $21, $22)
-                 ON CONFLICT (id) DO UPDATE SET diary_id          = $2,
-                                                server_created_at = now(),
-                                                server_updated_at = now(),
-                                                server_deleted_at = null,
-                                                created_at        = to_timestamp($3 / 1000.0),
-                                                updated_at        = to_timestamp($4 / 1000.0),
-                                                note_type         = $5,
-                                                date_event_start  = now(),
-                                                date_event_end    = now(),
-                                                photo             = $8,
-                                                food              = $9,
-                                                volume            = $10,
-                                                note              = $11,
-                                                duration          = $12,
-                                                milk_volume_left  = $13,
-                                                milk_volume_right = $14,
-                                                type              = $15,
-                                                achievement       = $16,
-                                                weight            = $17,
-                                                growth            = $18,
-                                                head_circle       = $19,
-                                                temp              = $20,
-                                                tags              = $21,
-                                                pressure          = $22;`,
-                [
-                  _.id, _.diaryId, _.createdAt, _.updatedAt, _.noteType,
-                  _.dateEventStart, _.dateEventEnd, _.photo, _.food,
-                  _.volume, _.note, _.duration, _.milkVolumeRight,
-                  _.milkVolumeLeft, _.type, _.achievement, _.weight,
-                  _.growth, _.headCircle, _.temp, _.tags, _.pressure
-                ]
-              );
+              const {rowCount} = await createOrUpdateNote(preparedNote, server);
 
               if (rowCount) {
                 processedNotes++;
               } else {
-                throw new Error(`The changes object contains a record that has been modified on the server after lastPulledAt, her id=${_.id}`);
+                throw new Error(`The changes object contains a record that has been modified on the server after lastPulledAt, her id=${preparedNote.id}`);
               }
             } else {
               throw new Error(`The changes object contains a record with id=${currNote.id} that was deleted`);
