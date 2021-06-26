@@ -21,11 +21,7 @@ type TFieldsNoteByType = {
 //const allFields = ([] as string[]).concat(...Object.values(fieldsNoteByType));
 //export const allFieldNote = new Set(allFields);
 
-//todo что возвращает? тип..
 export const checkANDPrepareNote = (note: INote) => {
-  /*if (!note.id || !note.diary_id || !note.note_type) {
-    throw new Error('id or diaryId or noteType was not passed');
-  }*/
   return {
     id: note.id,
     diaryId: note.diary_id,

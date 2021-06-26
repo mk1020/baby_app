@@ -1,5 +1,4 @@
 import {FastifyInstance} from 'fastify';
-import {signUpConfirmScheme} from '@/components/auth/signUp.scheme';
 import {INote} from '@/components/diary/types';
 import {checkToken} from '@/hooks';
 import {checkANDPrepareNote} from '@/components/diary/assistant';
@@ -43,16 +42,15 @@ export const note = async (server: FastifyInstance) => {
     '/note/sync',
     {preValidation: checkToken},
     async (req, reply) => {
-      const {diaryId} = req.query;
-      let {lastPulledAt} = req.query;
+      let {lastPulledAt, diaryId} = req.query;
       lastPulledAt === undefined && (lastPulledAt = null);
+      diaryId = Number(diaryId);
 
       await server.pg.query('BEGIN');
       const {rows: created} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND server_deleted_at is NULL AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
       const {rows: updated} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND server_deleted_at is NULL AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
       const {rows: deleted} = await server.pg.query<INote>('SELECT * FROM root.notes WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND diary_id = $2 FOR UPDATE', [lastPulledAt, diaryId]);
       await server.pg.query('COMMIT');
-
       const deletedIds = deleted.map(note => note.id);
       const changes: Changes = {
         [tableName]: {
@@ -70,7 +68,7 @@ export const note = async (server: FastifyInstance) => {
     async (req, reply) => {
       const {lastPulledAt, diaryId} = req.query;
       const {changes} = req.body;
-      const changesByEvents = changes[tableName];
+      const changesByEvents: ChangesByEvents = changes[tableName];
 
       try {
         if (changesByEvents) {
@@ -90,8 +88,6 @@ export const note = async (server: FastifyInstance) => {
               if (serverDeletedAt > lastPulledAt || serverUpdatedAt > lastPulledAt) {
                 throw new Error('DOCUMENT_WAS_MODIFIED_OR_UPDATE_ERROR');
               }
-              console.log('currNote.server_updated_at', currNote.server_updated_at);
-              console.log('serverUpdatedAt', new Date(currNote.server_updated_at));
             }
 
 
