@@ -81,10 +81,10 @@ export const note = async (server: FastifyInstance) => {
             const preparedNote = prepareNote(note);
             const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.notes WHERE id=$1`, [preparedNote.id]);
             const currNote = rows[0];
-            //if changed between user's pull and push calls
             if (currNote) {
               const serverUpdatedAt = new Date(currNote.server_updated_at).getTime();
               const serverDeletedAt = new Date(currNote.server_deleted_at).getTime();
+              //if changed between user's pull and push calls
               if (serverDeletedAt > lastPulledAt || serverUpdatedAt > lastPulledAt) {
                 throw new Error('DOCUMENT_WAS_MODIFIED_OR_UPDATE_ERROR');
               }
