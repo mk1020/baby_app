@@ -4,9 +4,10 @@ import {emailRegex, passRegex} from '../../validation/regex';
 export const oAuthGoogleScheme: FastifySchema = {
   body: {
     type: 'object',
-    required: ['oAuthIdToken'],
+    required: ['oAuthIdToken', 'diaryId'],
     properties: {
-      oAuthIdToken: {type: 'string'}
+      oAuthIdToken: {type: 'string'},
+      diaryId: {type: 'string'}
     },
   },
   response: {

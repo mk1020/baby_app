@@ -24,36 +24,71 @@ export interface INoteEditable<T> {
 /* eslint-disable camelcase */
 export interface INote {
   id: string,
-  diary_id: number,
+  page_id: string,
+  diary_id: string,
+  user_id: number
+  chapter_id: string | null,
+  bookmarked: boolean
+  title: string
+  note: string,
+  photo: string | null,
+  tags: string | null,
+  created_at: number,
+  updated_at: number,
   server_created_at: number,
   server_updated_at: number,
   server_deleted_at: number,
-  created_at: number,
-  updated_at: number,
-  note_type:  TNoteType,
-  date_event_start: number | null,
-  date_event_end: number | null,
+}
+export interface INoteJS {
+  id: string,
+  pageId: string,
+  diaryId: string,
+  userId: number
+  chapterId: string | null,
+  title: string
+  bookmarked: boolean
+  note: string,
   photo: string | null,
-  food: string | null,
-  volume: string | null,
-  note: string | null,
-  duration: string | null,
-  milk_volume_left: string | null,
-  milk_volume_right: string | null,
-  type: string | null,
-  achievement: string | null,
-  weight: string | null,
-  growth: string | null,
-  head_circle: string | null,
-  temp: number | null,
   tags: string | null,
-  pressure: string | null,
+  createdAt: number,
+  updatedAt: number,
 }
 
-export interface INoteBodyPost {
-  note: INote
+export interface IPageJS {
+  id: string
+  diaryId: string
+  chapterId: string | null
+  name: string
+  createdAt: number
+  updatedAt: number
+  userId: number
+}
+export interface IPage {
+  id: string
+  diary_id: string
+  chapter_id: string | null
+  name: string
+  created_at: number
+  updated_at: number
+  user_id: number
 }
 
-export interface INoteBodyPatch {
-  note: INote,
+export interface IChapterJS {
+  id: string
+  userId: number
+  diaryId: string
+  name: string
+  number: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface IChapter {
+  id: string
+  user_id: number
+  name: string
+  diary_id: string
+  number: string
+  created_at: number
+  updated_at: number
 }

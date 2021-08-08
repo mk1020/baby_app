@@ -55,3 +55,19 @@ export const findOrCreateUser = async (server: FastifyInstance, userPayload: Tok
     }
   }
 };
+
+export const createDiaryIfNotExist = async (server: FastifyInstance, userId: number, diaryId: string) => {
+  const {rows: diary} = await server.pg.query('SELECT id FROM root.diaries WHERE id=$1', [diaryId]);
+  console.log('diaryId', diaryId)
+  if (diary.length) {
+    return diaryId;
+  } else {
+    const {rows} = await server.pg.query('insert into root.diaries (id, user_id, server_deleted_at, server_updated_at, server_created_at) values ($1, $2, null, now(), now()) RETURNING id', [diaryId, userId]);
+    if (rows.length) {
+      return rows[0].id;
+    } else {
+      return Promise.reject('Error writing to the database by create user');
+    }
+  }
+
+};
