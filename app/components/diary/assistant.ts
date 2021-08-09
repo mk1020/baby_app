@@ -1,4 +1,14 @@
-import {IChapter, IChapterJS, INote, INoteEditable, INoteJS, IPage, IPageJS, TNoteType} from '@/components/diary/types';
+import {
+  IChapter,
+  IChapterJS,
+  INote,
+  INoteEditable,
+  INoteJS,
+  IPage,
+  IPageJS,
+  IPhotoByMonth, IPhotoByMonthJS,
+  TNoteType,
+} from '@/components/diary/types';
 import {FastifyInstance} from 'fastify';
 import {QueryResult} from 'pg';
 
@@ -115,4 +125,37 @@ export const createOrUpdateChapter = async (_: IChapterJS, server: FastifyInstan
   } catch (e) {
     throw e;
   }
+};
+
+export const preparePhoto = (photo: IPhotoByMonth): IPhotoByMonthJS => ({
+  id: photo.id,
+  userId: photo.user_id,
+  diaryId: photo?.diary_id,
+  photo: photo?.photo || null,
+  date: photo?.date,
+  createdAt: photo?.created_at,
+  updatedAt: photo?.updated_at
+});
+
+export const createOrUpdatePhoto = async (_: IPhotoByMonthJS, server: FastifyInstance, diaryId: string): Promise<QueryResult> => {
+  return await server.pg.query<IPhotoByMonth>(
+    `INSERT INTO root.photos_by_month
+     VALUES ($1, $7, $2, $5, to_timestamp($6 / 1000.0), now(), now(), null, to_timestamp($3 / 1000.0),
+             to_timestamp($4 / 1000.0))
+     ON CONFLICT (id) DO UPDATE SET diary_id          = $2,
+                                    server_created_at = now(),
+                                    server_updated_at = now(),
+                                    server_deleted_at = null,
+                                    created_at        = to_timestamp($3 / 1000.0),
+                                    updated_at        = to_timestamp($4 / 1000.0),
+                                    user_id           = $7,
+                                    photo           = $5,
+                                    date           = to_timestamp($6 / 1000.0)
+
+    ;`,
+    [
+      _.id, diaryId, _.createdAt, _.updatedAt,
+      _.photo, _.date, _.userId
+    ]
+  );
 };

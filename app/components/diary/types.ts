@@ -92,3 +92,23 @@ export interface IChapter {
   created_at: number
   updated_at: number
 }
+
+export interface IPhotoByMonth {
+  id: string
+  user_id: number
+  diary_id: string
+  photo: string | null
+  date: number
+  created_at: number
+  updated_at: number
+}
+
+export interface IPhotoByMonthJS {
+  id: string
+  userId: number
+  diaryId: string
+  photo: string | null
+  date: number
+  createdAt: number
+  updatedAt: number
+}

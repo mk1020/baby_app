@@ -1,11 +1,11 @@
 import {FastifyInstance} from 'fastify';
-import {IChapter, INote, IPage} from '@/components/diary/types';
+import {IChapter, IPhotoByMonth} from '@/components/diary/types';
 import {checkToken} from '@/hooks';
-import {createOrUpdateChapter, prepareChapter} from '@/components/diary/assistant';
+import {createOrUpdatePhoto, preparePhoto} from '@/components/diary/assistant';
 
 type ChangesByEvents = {
-  created: IChapter[],
-  updated: IChapter[],
+  created: IPhotoByMonth[],
+  updated: IPhotoByMonth[],
   deleted: string[],
 }
 type Changes = {
@@ -30,15 +30,15 @@ interface IQuerystringPush {
 interface IBodyPush {
   changes: Changes
 }
-const tableName = 'chapters';
+const tableName = 'photos_by_month';
 enum Events {
   created = 'created',
   updated = 'updated',
   deleted = 'deleted'
 }
-export const chapters = async (server: FastifyInstance) => {
+export const photosByMonth = async (server: FastifyInstance) => {
   server.get<{Querystring: IQuerystringPull, Headers: IHeaders}>(
-    '/chapters/sync',
+    '/photos-by-month/sync',
     {preValidation: checkToken},
     async (req, reply) => {
       let {lastPulledAt, userId} = req.query;
@@ -46,11 +46,11 @@ export const chapters = async (server: FastifyInstance) => {
       userId = Number(userId);
 
       await server.pg.query('BEGIN');
-      const {rows: created} = await server.pg.query<IChapter>('SELECT * FROM root.chapters WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
-      const {rows: updated} = await server.pg.query<IChapter>('SELECT * FROM root.chapters WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
-      const {rows: deleted} = await server.pg.query<IChapter>('SELECT * FROM root.chapters WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      const {rows: created} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      const {rows: updated} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      const {rows: deleted} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
       await server.pg.query('COMMIT');
-      const deletedIds = deleted.map(chapter => chapter.id);
+      const deletedIds = deleted.map(photo => photo.id);
       const changes: Changes = {
         [tableName]: {
           created,
@@ -62,7 +62,7 @@ export const chapters = async (server: FastifyInstance) => {
     });
 
   server.post<{Querystring: IQuerystringPush, Headers: IHeaders, Body: IBodyPush}>(
-    '/chapters/sync',
+    '/photos-by-month/sync',
     {preValidation: checkToken},
     async (req, reply) => {
       const {lastPulledAt} = req.query;
@@ -70,57 +70,54 @@ export const chapters = async (server: FastifyInstance) => {
       const {userId} = req.headers;
 
       const changesByEvents: ChangesByEvents = changes[tableName];
-
       try {
         if (changesByEvents) {
           //created and updated
-          const chapters = [...changesByEvents[Events.created], ...changesByEvents[Events.updated]];
+          const photos = [...changesByEvents[Events.created], ...changesByEvents[Events.updated]];
 
           await server.pg.query('BEGIN');
           const {rows: diary} = await server.pg.query(`SELECT id FROM root.diaries WHERE user_id=$1`, [userId]);
           if (diary.length) {
             const diaryId = diary[0].id;
 
-            let processedChapters = 0;
-            for (const chapter of chapters) {
-              const preparedChapter = prepareChapter(chapter);
+            let processedPhotos = 0;
+            for (const photo of photos) {
+              const preparedPhoto = preparePhoto(photo);
 
-              const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.chapters WHERE id=$1`, [preparedChapter.id]);
-              const currChapter = rows.length && rows[0];
+              const {rows} = await server.pg.query(`SELECT id, server_deleted_at, server_updated_at FROM root.photos_by_month WHERE id=$1`, [preparedPhoto.id]);
+              const currPhoto = rows.length && rows[0];
 
-              if (currChapter) {
-                const serverUpdatedAt = new Date(currChapter.server_updated_at).getTime();
+              if (currPhoto) {
+                const serverUpdatedAt = new Date(currPhoto.server_updated_at).getTime();
 
-                const serverDeletedAt = new Date(currChapter.server_deleted_at).getTime();
+                const serverDeletedAt = new Date(currPhoto.server_deleted_at).getTime();
                 //if changed between user's pull and push calls
                 if (serverDeletedAt > lastPulledAt || serverUpdatedAt > lastPulledAt) {
                   throw new Error('DOCUMENT_WAS_MODIFIED_OR_UPDATE_ERROR');
                 }
               }
 
-              if (currChapter?.server_deleted_at === null || !currChapter) {
-                const {rowCount} = await createOrUpdateChapter(preparedChapter, server, diaryId);
+              if (currPhoto?.server_deleted_at === null || !currPhoto) {
+                const {rowCount} = await createOrUpdatePhoto(preparedPhoto, server, diaryId);
 
                 if (rowCount) {
-                  processedChapters++;
+                  processedPhotos++;
                 } else {
-                  throw new Error(`The changes object contains a record that has been modified on the server after lastPulledAt, her id=${preparedChapter.id}`);
+                  throw new Error(`The changes object contains a record that has been modified on the server after lastPulledAt, her id=${preparedPhoto.id}`);
                 }
               } else {
-                throw new Error(`The changes object contains a record with id=${currChapter.id} that was deleted`);
+                throw new Error(`The changes object contains a record with id=${currPhoto.id} that was deleted`);
               }
             }
 
             //deleted
             let processedDeletes = 0;
             for (const idDeleted of changesByEvents[Events.deleted]) {
-              const {rowCount: deleted} = await server.pg.query<IChapter>(`UPDATE root.chapters SET server_deleted_at=now() WHERE id = $1`, [idDeleted]);
-              const {rowCount: deletedPages} = await server.pg.query<IPage>(`UPDATE root.pages SET server_deleted_at=now() WHERE chapter_id = $1`, [idDeleted]);
-              const {rowCount: deletedNotes} = await server.pg.query<INote>(`UPDATE root.notes SET server_deleted_at=now() WHERE chapter_id = $1`, [idDeleted]);
+              const {rowCount: deleted} = await server.pg.query<IChapter>(`UPDATE root.photos_by_month SET server_deleted_at=now() WHERE id = $1`, [idDeleted]);
               deleted && processedDeletes++;
             }
 
-            if (processedChapters === chapters.length && processedDeletes <= changesByEvents[Events.deleted].length) {
+            if (processedPhotos === photos.length && processedDeletes <= changesByEvents[Events.deleted].length) {
               await server.pg.query('COMMIT');
               reply.send();
             } else {
