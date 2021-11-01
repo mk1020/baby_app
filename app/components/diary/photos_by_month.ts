@@ -111,13 +111,15 @@ export const photosByMonth = async (server: FastifyInstance) => {
             }
 
             //deleted
-            let processedDeletes = 0;
-            for (const idDeleted of changesByEvents[Events.deleted]) {
-              const {rowCount: deleted} = await server.pg.query<IChapter>(`UPDATE root.photos_by_month SET server_deleted_at=now() WHERE id = $1`, [idDeleted]);
-              deleted && processedDeletes++;
+            //let processedDeletes = 0;
+            for (const updatedPhoto of changesByEvents[Events.updated]) {
+              if (!updatedPhoto.photo) {
+                const {rowCount: deleted} = await server.pg.query<IPhotoByMonth>(`UPDATE root.photos_by_month SET server_deleted_at=now() WHERE id = $1`, [updatedPhoto.id]);
+                //deleted && processedDeletes++;
+              }
             }
 
-            if (processedPhotos === photos.length && processedDeletes <= changesByEvents[Events.deleted].length) {
+            if (processedPhotos === photos.length) {
               await server.pg.query('COMMIT');
               reply.send();
             } else {

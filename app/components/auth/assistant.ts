@@ -57,8 +57,7 @@ export const findOrCreateUser = async (server: FastifyInstance, userPayload: Tok
 };
 
 export const createDiaryIfNotExist = async (server: FastifyInstance, userId: number, diaryId: string) => {
-  const {rows: diary} = await server.pg.query('SELECT id FROM root.diaries WHERE id=$1', [diaryId]);
-  console.log('diaryId', diaryId)
+  const {rows: diary} = await server.pg.query('SELECT id FROM root.diaries WHERE id=$1 OR user_id=$2', [diaryId, userId]);
   if (diary.length) {
     return diaryId;
   } else {

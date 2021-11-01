@@ -12,6 +12,7 @@ import {oAuth} from '@/components/auth/oAuth';
 import {chapters} from '@/components/diary/chapters';
 import {pages} from '@/components/diary/pages';
 import {photosByMonth} from '@/components/diary/photos_by_month';
+import {photos} from '@/components/diary/photos';
 
 export const registerRoutes = (server: FastifyInstance) => {
   server.register(signUp);
@@ -28,4 +29,5 @@ export const registerRoutes = (server: FastifyInstance) => {
   server.register(passRecovery);
   server.register(token);
   server.register(oAuth);
+  server.register(photos);
 };
