@@ -6,7 +6,7 @@ import {createOrUpdatePhoto, preparePhoto} from '@/components/diary/assistant';
 type ChangesByEvents = {
   created: IPhotoByMonth[],
   updated: IPhotoByMonth[],
-  deleted: string[],
+  deleted?: string[],
 }
 type Changes = {
   // eslint-disable-next-line camelcase
@@ -46,16 +46,16 @@ export const photosByMonth = async (server: FastifyInstance) => {
       userId = Number(userId);
 
       await server.pg.query('BEGIN');
-      const {rows: created} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
-      const {rows: updated} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND server_deleted_at is NULL AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
-      const {rows: deleted} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      const {rows: created} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_created_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at = server_updated_at AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      const {rows: updated} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_updated_at >= to_timestamp($1 / 1000.0) OR $1 IS NULL) AND server_created_at != server_updated_at AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
+      // const {rows: deleted} = await server.pg.query<IPhotoByMonth>('SELECT * FROM root.photos_by_month WHERE (server_deleted_at >= to_timestamp($1 / 1000.0) OR server_deleted_at IS NOT NULL AND $1 IS NULL) AND user_id = $2 FOR UPDATE', [lastPulledAt, userId]);
       await server.pg.query('COMMIT');
-      const deletedIds = deleted.map(photo => photo.id);
+      //const deletedIds = deleted.map(photo => photo.id);
       const changes: Changes = {
         [tableName]: {
           created,
           updated,
-          deleted: deletedIds
+          // deleted: deletedIds
         }
       };
       return reply.send({changes, timestamp: new Date().getTime()});
@@ -90,9 +90,9 @@ export const photosByMonth = async (server: FastifyInstance) => {
               if (currPhoto) {
                 const serverUpdatedAt = new Date(currPhoto.server_updated_at).getTime();
 
-                const serverDeletedAt = new Date(currPhoto.server_deleted_at).getTime();
+                //const serverDeletedAt = new Date(currPhoto.server_deleted_at).getTime();
                 //if changed between user's pull and push calls
-                if (serverDeletedAt > lastPulledAt || serverUpdatedAt > lastPulledAt) {
+                if (/*serverDeletedAt > lastPulledAt || */serverUpdatedAt > lastPulledAt) {
                   throw new Error('DOCUMENT_WAS_MODIFIED_OR_UPDATE_ERROR');
                 }
               }
@@ -112,12 +112,13 @@ export const photosByMonth = async (server: FastifyInstance) => {
 
             //deleted
             //let processedDeletes = 0;
-            for (const updatedPhoto of changesByEvents[Events.updated]) {
+            /*for (const updatedPhoto of changesByEvents[Events.updated]) {
               if (!updatedPhoto.photo) {
                 const {rowCount: deleted} = await server.pg.query<IPhotoByMonth>(`UPDATE root.photos_by_month SET server_deleted_at=now() WHERE id = $1`, [updatedPhoto.id]);
-                //deleted && processedDeletes++;
+                //
+                // deleted && processedDeletes++;
               }
-            }
+            }*/
 
             if (processedPhotos === photos.length) {
               await server.pg.query('COMMIT');
