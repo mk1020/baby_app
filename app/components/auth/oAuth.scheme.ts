@@ -22,6 +22,7 @@ export const oAuthGoogleScheme: FastifySchema = {
           }
         },
         userId: {type: 'number'},
+        email: {type: 'string'},
       }
     },
     500: {

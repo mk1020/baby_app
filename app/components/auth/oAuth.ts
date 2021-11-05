@@ -24,7 +24,7 @@ export const oAuth = async (server: FastifyInstance) => {
         return reply
           .header('Content-Type', 'application/json; charset=utf-8')
           .status(201)
-          .send(JSON.stringify({userId, token}));
+          .send(JSON.stringify({userId, token, email: payload.email}));
       } catch (e) {
         return reply.status(500).send(e);
       }
