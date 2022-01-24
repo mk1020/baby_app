@@ -3,8 +3,6 @@ import {env} from '../../envConfig';
 import {OAuth2Client} from 'google-auth-library';
 import {TokenPayload} from 'google-auth-library/build/src/auth/loginticket';
 import {FastifyInstance} from 'fastify';
-import {addNewToken} from '@/components/users/token';
-import {warn} from 'google-auth-library/build/src/messages';
 
 export const sha256 = (text: string): string => {
   const hash = createHash('sha256').update(text + env.passSalt).digest('hex');

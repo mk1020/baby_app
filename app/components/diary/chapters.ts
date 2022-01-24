@@ -89,7 +89,7 @@ export const chapters = async (
     }
   } catch (e) {
     await server.pg.query('ROLLBACK');
-    throw new Error('err 500 in ' + ChaptersTableName);
+    throw new Error('err 500 in ' + ChaptersTableName + e);
   }
 };
 //TODO В частности, убедитесь, что нет записи с last_modified равным или большим чем NOW(), и, если есть, увеличьте новую метку времени на 1....
